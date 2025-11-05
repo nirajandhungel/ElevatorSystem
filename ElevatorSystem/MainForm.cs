@@ -19,15 +19,11 @@ namespace ElevatorSystem
         {
             InitializeComponent();
             // Set window to maximize
-
             // Enable double buffering to reduce flicker
             this.DoubleBuffered = true;
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
-
             this.WindowState = FormWindowState.Maximized;
             InitializeSystem();
             SetupBackgroundWorkers();
-            ApplyModernStyling();
         }
 
         private void InitializeSystem()
@@ -41,7 +37,7 @@ namespace ElevatorSystem
                 // Initialize log manager
                 logManager = new LogManager(dbManager, dgvLogs);
 
-                // Initialize elevator controller
+                // Initialize elevator controller with correct control names
                 elevatorController = new ElevatorController(
                     pbElevatorCar,
                     pbDoorLeft,
@@ -56,8 +52,6 @@ namespace ElevatorSystem
                 // Set up event handlers
                 SetupEventHandlers();
 
-                // Initialize elevator position - REMOVED the SetInitialPosition call since it's handled in controller
-
                 logManager.LogActivity("Burj Khalifa Elevator System initialized successfully", "INFO");
                 UpdateStatusBar("System Ready - Burj Khalifa Elevator Control Active", Color.FromArgb(34, 197, 94));
             }
@@ -66,17 +60,6 @@ namespace ElevatorSystem
                 MessageBox.Show($"Initialization Error: {ex.Message}", "System Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void ApplyModernStyling()
-        {
-            // Make sure elevator components are visible
-            pbElevatorCar.BringToFront();
-            pbDoorLeft.BringToFront();
-            pbDoorRight.BringToFront();
-            lblFloorDisplay.BringToFront();
-
-    
         }
 
         private void SetupEventHandlers()
@@ -112,8 +95,8 @@ namespace ElevatorSystem
             movementWorker.DoWork += MovementWorker_DoWork;
             movementWorker.ProgressChanged += MovementWorker_ProgressChanged;
             movementWorker.RunWorkerCompleted += MovementWorker_RunWorkerCompleted;
-
         }
+
         private void RequestFloor(int floor, string source)
         {
             if (isEmergencyStopActive)
@@ -123,10 +106,14 @@ namespace ElevatorSystem
                 return;
             }
 
-            if (!elevatorController.CanMove())
+            // Check if already at the requested floor
+            if (elevatorController.GetCurrentFloor() == floor)
             {
-                MessageBox.Show("Elevator is currently unavailable. Please wait...", "Warning",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                string alreadyAtFloorName = floor == 0 ? "G" : "1";
+                MessageBox.Show($"Elevator is already at Floor {alreadyAtFloorName}!", "Already at Floor",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                logManager.LogActivity($"Request ignored - already at floor {alreadyAtFloorName}", "INFO");
+                UpdateStatusBar($"Already at Floor {alreadyAtFloorName}", Color.FromArgb(245, 158, 11));
                 return;
             }
 
@@ -135,20 +122,32 @@ namespace ElevatorSystem
 
             if (!movementWorker.IsBusy)
             {
-                // Close doors first if they are open, then start movement
+                // Check if doors are open before starting movement
                 if (elevatorController.AreDoorsOpen())
                 {
-                    // Subscribe to doors closed event
-                    void OnDoorsClosed(object s, EventArgs e)
+                    // Subscribe to DoorsClosed event to start movement after doors close
+                    EventHandler doorsClosedHandler = null;
+                    doorsClosedHandler = async (s, e) =>
                     {
-                        elevatorController.DoorsClosed -= OnDoorsClosed; // Unsubscribe
-                        movementWorker.RunWorkerAsync(floor);
-                    }
+                        // Unsubscribe after handling
+                        elevatorController.DoorsClosed -= doorsClosedHandler;
 
-                    elevatorController.DoorsClosed += OnDoorsClosed;
+                        // Small delay to ensure door closing is complete
+                        await System.Threading.Tasks.Task.Delay(200);
+
+                        // Now start the movement
+                        if (!movementWorker.IsBusy)
+                        {
+                            movementWorker.RunWorkerAsync(floor);
+                        }
+                    };
+
+                    elevatorController.DoorsClosed += doorsClosedHandler;
+
+                    // Close the doors
                     elevatorController.CloseDoors();
-                    //movementWorker.RunWorkerAsync(floor);
-
+                    logManager.LogActivity($"Closing doors before moving to floor {floorName}", "DOOR");
+                    UpdateStatusBar($"Closing doors before moving to Floor {floorName}", Color.FromArgb(245, 158, 11));
                 }
                 else
                 {
@@ -163,6 +162,9 @@ namespace ElevatorSystem
                 UpdateStatusBar($"Floor {floorName} queued - Processing requests", Color.FromArgb(245, 158, 11));
             }
         }
+
+
+
         private void MovementWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             int targetFloor = (int)e.Argument;
@@ -193,7 +195,6 @@ namespace ElevatorSystem
             if (e.ProgressPercentage == 0)
             {
                 elevatorController.StartMovement(targetFloor);
-
                 UpdateStatusBar($"Moving to Floor {(targetFloor == 0 ? "G" : "1")}...", Color.FromArgb(59, 130, 246));
             }
 
@@ -218,7 +219,7 @@ namespace ElevatorSystem
                 elevatorController.CompleteMovement(targetFloor);
 
                 // Open doors after arrival
-                elevatorController.OpenDoors();
+                //elevatorController.OpenDoors();
 
                 UpdateStatusBar($"Arrived at Floor {(targetFloor == 0 ? "G" : "1")}", Color.FromArgb(34, 197, 94));
 
@@ -226,10 +227,6 @@ namespace ElevatorSystem
                 ProcessNextRequest();
             }
         }
-
-
-
-
 
         private void UpdateElevatorCarPosition(int progress, int targetFloor = 0)
         {
@@ -241,7 +238,7 @@ namespace ElevatorSystem
 
             // Calculate position based on floor and progress
             int groundFloorPosition = 400; // Position for Ground floor
-            int firstFloorPosition = 96;  // Position for 1st floor
+            int firstFloorPosition = 50;  // Position for 1st floor
 
             if (targetFloor == 1)
             {
@@ -279,7 +276,7 @@ namespace ElevatorSystem
             {
                 elevatorController.ResetEmergency();
                 btnAlarm.BackColor = Color.FromArgb(245, 158, 11);
-                btnAlarm.Text = "🔄 CALL HELP";
+                btnAlarm.Text = "🔔 CALL HELP";
                 UpdateStatusBar("Emergency reset - System normal", Color.FromArgb(34, 197, 94));
                 logManager.LogActivity("Emergency alarm reset by user", "INFO");
             }
@@ -435,11 +432,12 @@ namespace ElevatorSystem
 
         private void UpdateStatusBar(string message, Color color)
         {
-            if (lblStatusBar.GetCurrentParent().InvokeRequired)
+            if (lblStatusBar.InvokeRequired)
             {
-                lblStatusBar.GetCurrentParent().Invoke(new Action(() => UpdateStatusBar(message, color)));
+                lblStatusBar.Invoke(new Action(() => UpdateStatusBar(message, color)));
                 return;
             }
+
 
             lblStatusBar.Text = $"{DateTime.Now:HH:mm:ss} - {message}";
             lblStatusBar.ForeColor = color;
@@ -481,14 +479,17 @@ namespace ElevatorSystem
 
         public void UpdateProgressBar(int value)
         {
-            if (progressBar.GetCurrentParent().InvokeRequired)
+            if (progressBar.InvokeRequired)
             {
-                progressBar.GetCurrentParent().Invoke(new Action<int>(UpdateProgressBar), value);
+                progressBar.Invoke(new Action<int>(UpdateProgressBar), value);
                 return;
             }
             progressBar.Value = value;
         }
 
-       
+        private void pnlMain_Paint(object sender, PaintEventArgs e)
+        {
+            // Custom paint logic can be added here if needed
+        }
     }
 }

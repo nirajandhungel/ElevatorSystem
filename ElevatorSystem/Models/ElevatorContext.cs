@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ElevatorSystem.Interfaces;
+using ElevatorSystem.States;
+using System;
 using System.Collections.Generic;
 
 namespace ElevatorSystem.Models
@@ -14,15 +16,15 @@ namespace ElevatorSystem.Models
         public bool DoorsOpen { get; set; }
         public bool IsEmergency { get; private set; }
 
-        // Events
-        public event EventHandler<FloorChangedEventArgs> FloorChanged;
-        public event EventHandler<StateChangedEventArgs> StateChanged;
-        public event EventHandler DoorsOpened;
-        public event EventHandler DoorsClosed;
-        public event EventHandler<MovementEventArgs> MovementStarted;
-        public event EventHandler MovementCompleted;
-        public event EventHandler EmergencyActivated;
-        public event EventHandler EmergencyReset;
+        // Events - marked as nullable to fix warnings
+        public event EventHandler<FloorChangedEventArgs>? FloorChanged;
+        public event EventHandler<StateChangedEventArgs>? StateChanged;
+        public event EventHandler? DoorsOpened;
+        public event EventHandler? DoorsClosed;
+        public event EventHandler<MovementEventArgs>? MovementStarted;
+        public event EventHandler? MovementCompleted;
+        public event EventHandler? EmergencyActivated;
+        public event EventHandler? EmergencyReset;
 
         public ElevatorContext()
         {
@@ -58,7 +60,6 @@ namespace ElevatorSystem.Models
             }
         }
 
-        // ADD THIS MISSING METHOD
         public void CompleteDoorOperation(bool doorsOpened)
         {
             if (doorsOpened)
@@ -77,11 +78,9 @@ namespace ElevatorSystem.Models
             {
                 throw new ArgumentException($"Floor must be between {MinFloor} and {MaxFloor}");
             }
-            if(CurrentFloor == floor)
+            if (CurrentFloor == floor)
             {
-                throw new ArgumentException($"Already at {floor} ");
-
-
+                throw new ArgumentException($"Already at floor {floor}");
             }
 
             if (!IsEmergency)
