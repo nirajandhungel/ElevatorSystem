@@ -13,6 +13,7 @@ namespace ElevatorSystem
         private DatabaseManager dbManager;
         private LogManager logManager;
         private BackgroundWorker movementWorker;
+        private bool isAlarmActive = false;
         private bool isEmergencyStopActive = false;
 
         public MainForm()
@@ -272,31 +273,57 @@ namespace ElevatorSystem
 
         private void BtnAlarm_Click(object sender, EventArgs e)
         {
-            if (elevatorController.IsEmergency)
+
+
+            if (isEmergencyStopActive)
             {
-                elevatorController.ResetEmergency();
-                btnAlarm.BackColor = Color.FromArgb(245, 158, 11);
-                btnAlarm.Text = "🔔 CALL HELP";
-                UpdateStatusBar("Emergency reset - System normal", Color.FromArgb(34, 197, 94));
-                logManager.LogActivity("Emergency alarm reset by user", "INFO");
+                // Reset emergency stop
+                MessageBox.Show("Aready EMERGENCY ALARM ACTIVATED!\n\nSecurity and maintenance have been notified.\nPlease remain calm.", "EMERGENCY ALERT",
+                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+
             else
             {
-                elevatorController.ActivateEmergency();
-                btnAlarm.BackColor = Color.FromArgb(180, 83, 9);
-                btnAlarm.Text = "RESET ALARM";
-                logManager.LogActivity("Emergency alarm activated by user", "EMERGENCY");
+                if (elevatorController.IsCallHelp)
+                {
+                    elevatorController.ResetAlarm();
+                    btnAlarm.BackColor = Color.FromArgb(245, 158, 11);
+                    btnAlarm.Text = "🔔 CALL HELP";
+                    UpdateCallHelpState(false);  // Return to normal
+                    UpdateStatusBar("Help Alarm reset - System normal", Color.FromArgb(34, 197, 94));
+                    logManager.LogActivity("Help alarm reset by user", "INFO");
+                }
+                else
+                {
+                    elevatorController.ActivateAlarm();
+                    btnAlarm.BackColor = Color.FromArgb(180, 83, 9);
+                    btnAlarm.Text = "RESET ALARM";
+                    logManager.LogActivity("Help alarm activated by user", "Call Help");
 
-                // Flash the alarm button
-                FlashButton(btnAlarm, Color.FromArgb(245, 158, 11), Color.FromArgb(180, 83, 9), 3);
+                    UpdateCallHelpState(true); // Apply Yellow Emergency Visual mode
 
-                MessageBox.Show("EMERGENCY ALARM ACTIVATED!\n\nSecurity and maintenance have been notified.\nPlease remain calm.", "EMERGENCY ALERT",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    // Flash the alarm button
+                    FlashButton(btnAlarm, Color.FromArgb(245, 158, 11), Color.FromArgb(180, 83, 9), 7);
+
+                    MessageBox.Show("Help ALARM ACTIVATED!\n\nSecurity and maintenance have been notified.\nPlease remain calm.", "Help ALERT",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
         }
 
         private void BtnEmergencyStop_Click(object sender, EventArgs e)
         {
+
+            if (isAlarmActive)
+            {
+                isAlarmActive = false;
+                elevatorController.ResetAlarm();
+                btnAlarm.Text = "🔔 CALL HELP";
+                UpdateCallHelpState(false);  // Return to normal
+                UpdateStatusBar("Help Alarm reset - System Emergency", Color.FromArgb(34, 197, 94));
+
+            }
+
             if (isEmergencyStopActive)
             {
                 // Reset emergency stop
@@ -331,10 +358,44 @@ namespace ElevatorSystem
                     UpdateStatusBar("EMERGENCY STOP ACTIVE - ALL OPERATIONS HALTED", Color.FromArgb(239, 68, 68));
 
                     // Flash the emergency stop button
-                    FlashButton(btnEmergencyStop, Color.FromArgb(239, 68, 68), Color.FromArgb(185, 28, 28), 5);
+                    FlashButton(btnEmergencyStop, Color.FromArgb(239, 68, 68), Color.FromArgb(185, 28, 28), 7);
                 }
             }
         }
+
+        private void UpdateCallHelpState(bool isHelpActive)
+        {
+            // Yellow colour palette
+            Color mainBg = isHelpActive ? Color.FromArgb(255, 128, 0) : Color.FromArgb(3, 41, 59);   // Light yellow vs normal dark
+            Color panelBg = isHelpActive ? Color.FromArgb(243, 150, 28) : Color.FromArgb(30, 41, 59);  // Slightly darker yellow
+            Color textColor = isHelpActive ? Color.FromArgb(195, 92, 23) : Color.FromArgb(203, 213, 225); // Brownish vs grey
+
+            // Update Main Background
+            pnlMain.BackColor = mainBg;
+
+            // Update Building Panel
+            pnlBuilding.BackColor = panelBg;
+
+            // Update Control Panel
+            grpControlPanel.BackColor = panelBg;
+            grpControlPanel.ForeColor = textColor;
+
+            // Update Logs Panel
+            grpLogs.BackColor = panelBg;
+            grpLogs.ForeColor = textColor;
+
+            if (isHelpActive)
+            {
+                lblStatusDisplay.Text = "● CALL HELP ACTIVE";
+                lblStatusDisplay.ForeColor = Color.FromArgb(180, 83, 9); // Dark Orange
+            }
+            else
+            {
+                lblStatusDisplay.Text = "● NORMAL";
+                lblStatusDisplay.ForeColor = Color.FromArgb(203, 213, 225);
+            }
+        }
+
 
         private void UpdateEmergencyState(bool isEmergency)
         {

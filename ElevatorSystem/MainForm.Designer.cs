@@ -25,35 +25,35 @@
 
         // Control Panel (renamed to match MainForm.cs)
         private System.Windows.Forms.GroupBox grpControlPanel;
-        private System.Windows.Forms.Button btnFloor0;  // Was btnControlG
-        private System.Windows.Forms.Button btnFloor1;  // Was btnControl1
-        private System.Windows.Forms.Button btnOpenDoor;  // Was btnControlOpen
-        private System.Windows.Forms.Button btnCloseDoor;  // Was btnControlClose
+        private System.Windows.Forms.Button btnFloor0;  //  btnControlG
+        private System.Windows.Forms.Button btnFloor1;  //  btnControl1
+        private System.Windows.Forms.Button btnOpenDoor;  //  btnControlOpen
+        private System.Windows.Forms.Button btnCloseDoor;  //  btnControlClose
         private System.Windows.Forms.Label labelControlPanel;
 
         // Display Components (renamed to match MainForm.cs)
         private System.Windows.Forms.Panel panelDisplay;
-        private System.Windows.Forms.Label lblFloorDisplay;  // Was displayFloor
-        private System.Windows.Forms.Label lblControlPanelDisplay;  // Was displayLabel
-        private System.Windows.Forms.Label lblStatusDisplay;  // Was displayStatus
+        private System.Windows.Forms.Label lblFloorDisplay;  //  displayFloor
+        private System.Windows.Forms.Label lblControlPanelDisplay;  //  displayLabel
+        private System.Windows.Forms.Label lblStatusDisplay;  //  displayStatus
 
         // Emergency buttons (renamed to match MainForm.cs)
-        private System.Windows.Forms.Button btnAlarm;  // Was btnEmergency
-        private System.Windows.Forms.Button btnEmergencyStop;  // NEW - was missing
+        private System.Windows.Forms.Button btnAlarm;  //  btnEmergency
+        private System.Windows.Forms.Button btnEmergencyStop;  // btn emergency
 
         // Status and info
         private System.Windows.Forms.Label labelStatus;
         private System.Windows.Forms.Label labelFloor;
-        private System.Windows.Forms.Label lblStatusBar;  // NEW - was missing
+        private System.Windows.Forms.Label lblStatusBar;  // NEW -  missing
 
         // Log management (renamed to match MainForm.cs)
         private System.Windows.Forms.GroupBox grpLogs;  // NEW
-        private System.Windows.Forms.Button btnRefreshLogs;  // Was btnViewLogs
+        private System.Windows.Forms.Button btnRefreshLogs;  //  btnViewLogs
         private System.Windows.Forms.Button btnClearLogs;
-        private System.Windows.Forms.Button btnExportLogs;  // NEW - was missing
-        private System.Windows.Forms.DataGridView dgvLogs;  // Was dataGridViewLogs
+        private System.Windows.Forms.Button btnExportLogs;  // NEW -  missing
+        private System.Windows.Forms.DataGridView dgvLogs;  //  dataGridViewLogs
 
-        // Progress bar (NEW - was missing)
+        // Progress bar (NEW -  missing)
         private System.Windows.Forms.ProgressBar progressBar;
 
         // Sound toggle

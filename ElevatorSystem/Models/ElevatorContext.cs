@@ -15,6 +15,8 @@ namespace ElevatorSystem.Models
         public int MaxFloor { get; } = 1;
         public bool DoorsOpen { get; set; }
         public bool IsEmergency { get; private set; }
+        public bool IsCallHelp { get; private set; }
+
 
         // Events - marked as nullable to fix warnings
         public event EventHandler<FloorChangedEventArgs>? FloorChanged;
@@ -25,6 +27,8 @@ namespace ElevatorSystem.Models
         public event EventHandler? MovementCompleted;
         public event EventHandler? EmergencyActivated;
         public event EventHandler? EmergencyReset;
+        public event EventHandler? AlarmActivated;
+        public event EventHandler? AlarmReset;
 
         public ElevatorContext()
         {
@@ -33,6 +37,8 @@ namespace ElevatorSystem.Models
             CurrentFloor = 0;
             DoorsOpen = true;
             IsEmergency = false;
+            IsCallHelp = false;
+
         }
 
         public void SetState(IElevatorState newState)
@@ -134,6 +140,22 @@ namespace ElevatorSystem.Models
             FloorChanged?.Invoke(this, new FloorChangedEventArgs(floor));
             SetState(new IdleState());
             SetState(new DoorsOpenState());
+        }
+
+        public void ActivateAlarm()
+        {
+            IsCallHelp = true;
+            SetState(new HelpState());
+            requestQueue.Clear();
+            AlarmActivated?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ResetAlarm()
+        {
+            IsCallHelp = false;
+            SetState(new IdleState());
+            DoorsOpen = true;
+            AlarmReset?.Invoke(this, EventArgs.Empty);
         }
 
         public void ActivateEmergency()

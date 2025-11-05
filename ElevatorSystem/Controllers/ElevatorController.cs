@@ -38,6 +38,8 @@ namespace ElevatorSystem.Controllers
         private readonly int openOffset;
 
         public bool IsEmergency => elevatorContext?.IsEmergency ?? false;
+        public bool IsCallHelp => elevatorContext?.IsCallHelp ?? false;
+
 
         private enum DoorAction
         {
@@ -142,6 +144,15 @@ namespace ElevatorSystem.Controllers
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+            if (IsCallHelp)
+            {
+                MessageBox.Show("Help alarm -- Doors are opening on help alarm!", "Operation Allowed",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                elevatorContext.OpenDoors();
+                StartDoorAnimation(DoorAction.Opening);
+                logManager.LogActivity("Door open requested", "ACTION");
+                return;
+            }
 
             if (doorsOpen || currentDoorAction == DoorAction.Opening)
                 return;
@@ -164,6 +175,16 @@ namespace ElevatorSystem.Controllers
             {
                 MessageBox.Show("Cannot close doors -- emergency state!", "Operation Not Allowed",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (IsCallHelp)
+            {
+                MessageBox.Show("Help alarm -- Doors are opening on help alarm!", "Operation Allowed",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                elevatorContext.CloseDoors();
+                StartDoorAnimation(DoorAction.Closing);
+                logManager.LogActivity("Door close requested", "ACTION");
                 return;
             }
 
@@ -346,6 +367,18 @@ namespace ElevatorSystem.Controllers
         public void ResetEmergency()
         {
             elevatorContext.ResetEmergency();
+        }
+
+        public void ActivateAlarm()
+        {
+            elevatorContext.ActivateAlarm();
+            // Clear any pending movements in emergency
+            pendingMovementTarget = null;
+        }
+
+        public void ResetAlarm()
+        {
+            elevatorContext.ResetAlarm();
         }
 
         private void OnFloorChanged(object sender, FloorChangedEventArgs e)
