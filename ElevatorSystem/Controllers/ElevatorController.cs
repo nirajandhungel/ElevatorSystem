@@ -68,6 +68,9 @@ namespace ElevatorSystem.Controllers
 
             openOffset = Math.Min(doorLeftInitialWidth, 60);
 
+
+            // Initialize door animation using  timer
+
             doorTimer = new System.Windows.Forms.Timer();
             doorTimer.Interval = 16;
             doorTimer.Tick += DoorTimer_Tick;

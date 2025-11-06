@@ -63,6 +63,8 @@ namespace ElevatorSystem
             }
         }
 
+        // these are setup event handlers for buttons and form events
+
         private void SetupEventHandlers()
         {
             // Control Panel Buttons

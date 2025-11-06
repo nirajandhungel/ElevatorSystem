@@ -112,6 +112,7 @@ namespace ElevatorSystem.Database
             }
         }
 
+
         public DataTable GetRecentLogs(int count)
         {
             var dt = new DataTable();
@@ -137,6 +138,8 @@ namespace ElevatorSystem.Database
 
             return reversed;
         }
+
+        // Fetch all logs , returns DataTable as e.Result for UI update.
 
         public DataTable GetAllLogs()
         {
